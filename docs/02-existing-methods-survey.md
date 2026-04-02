@@ -393,7 +393,67 @@
 
 **关键洞察**：没有任何现有工作实现了完整的自主闭环。每个方法都只覆盖了 1-3 个维度。SelfLLM 的核心创新在于**将所有维度统一到一个自主系统中**。
 
-## 9. 可直接复用的技术
+## 9. 2026 年最新进展（论文与社区）
+
+> 以下为 **2026 年 1–3 月** 前后在 arXiv / 顶会流程中出现的代表性工作；X/Twitter 上讨论多集中在论文转发、Hugging Face Papers 摘要与 ICLR 2026 相关 workshop，尚无统一「官方榜单」——此处以可核验的论文与开源仓库为准。
+
+### 9.1 综述与系统视角
+
+**Self-Improvement of Large Language Models: A Technical Overview and Future Outlook**（[arXiv:2603.25681](https://arxiv.org/abs/2603.25681)，2026-03-26）
+
+- **框架**：将自改进系统抽象为**闭环生命周期**——数据获取、数据选择、模型优化、推理细化，外加**自主评估层**；模型在各阶段驱动自身改进。
+- **价值**：与 SelfLLM 的模块划分（数据 / 训练 / 评估 / 策略）高度同构，可作为文献地图与术语对齐的入口。
+
+### 9.2 预训练阶段的自改进（强后训模型当裁判）
+
+**Self-Improving Pretraining: using post-trained models to pretrain better models**（[arXiv:2601.21343](https://arxiv.org/abs/2601.21343)，Meta FAIR 等）
+
+- **思路**：流式预训练文档上，用 RL 优化「接下来 K 个 token」的生成；**强后训模型**作为裁判，在候选 rollout、原文后缀、改写后缀之间比较**质量、安全、事实性**。
+- **结果**：相对标准预训练，事实性相对提升约 **36.2%**、安全性约 **18.5%**，整体生成质量 win rate 有大幅提升（论文报告最高约 **86.3%** 量级）。
+- **对 SelfLLM**：把「评估信号」前移到预训练，与「自主评估层」设计一致；仍依赖**固定裁判模型**，非完全无监督闭环。
+
+### 9.3 测试时自演化上下文（可学习技能）
+
+**Learning to Self-Evolve (LSE)**（[arXiv:2603.18620](https://arxiv.org/abs/2603.18620)，[OpenReview](https://openreview.net/forum?id=zedEdPhmsA)）
+
+- **思路**：用 RL 训练模型在**测试时**编辑自身上下文；树形演化 + UCB 类探索，将多步演化压成**单步 RL 目标**（每次编辑由下游任务改进给奖励）。
+- **结果**：**4B** 模型在 Text-to-SQL（BIRD）、QA（MMLU-Redux 等）上，超过用 GPT-5 / Claude Sonnet 4.5 驱动的自演化策略及部分 prompt 优化基线；且可迁移指导其他模型。
+- **对 SelfLLM**：与「策略优化 / program.md 人类编程实验方向」互补——LSE 学的是**改 prompt/上下文**，SelfLLM 侧重**改训练代码与数据管线**。
+
+### 9.4 Agent 轨迹反思与经验规则
+
+**Experiential Reflective Learning for Self-Improving LLM Agents**（[arXiv:2603.24639](https://arxiv.org/abs/2603.24639)）
+
+- **思路**：对任务轨迹做反思，生成可迁移的**启发式规则**，按需检索注入上下文。
+- **结果**：在 Gaia2 等基准上相对基线有可见成功率提升（论文报告约 **+7.8%** 量级）。
+- **对 SelfLLM**：接近 EvolveR 路线的「经验 → 原则库 → 在线检索」，可并入 Meta-Controller 的记忆层。
+
+### 9.5 系统提示词进化 + 权重联合优化
+
+**Unifying Evolutionary Prompt Search and Reinforcement Learning for LLM Self-Improvement (E-SPL)**（[arXiv:2602.14697](https://arxiv.org/abs/2602.14697)）
+
+- **思路**：多系统提示词下并行采样轨迹，**进化**（变异/交叉）更新 prompt，同时用 RL 更新权重；面向 easy→hard 泛化。
+- **结果**：论文报告在相应设定下成功率从约 **38.8%** 提升至约 **45.1%**。
+- **对 SelfLLM**：与「进化搜索 + 策略优化」一致，可对照 FunSearch / 策略记忆模块。
+
+### 9.6 自博弈与长上下文
+
+- **Language Self-Play (LSP)**（[arXiv:2509.07414](https://arxiv.org/abs/2509.07414)，ICLR 2026 DATA-FM workshop 等）：Challenger / Solver 双角色、同模型自博弈，**无额外外部数据**的持续训练；Llama-3.2-3B-Instruct 在指令遵循、数学、编码上均有提升。
+- **SPELL: Self-Play RL for Evolving Long-Context LLMs**（[arXiv:2509.23863](https://arxiv.org/abs/2509.23863)）：面向长上下文的三角色循环（提问者 / 回答者 / 验证者）+ 课程与自适应奖励，论文报告推理类 benchmark 平均约 **+7.6 分**量级。
+
+### 9.7 Agent 自进化（延续 2025 投稿线）
+
+**EvolveR**（[arXiv:2510.16079](https://arxiv.org/abs/2510.16079)，ICLR 2026 流程）：离线轨迹蒸馏为可复用战略原则 + 在线交互与策略强化——与 ERL 同属「经验驱动」一派，适合作为 Agent 侧参考。
+
+### 9.8 工程与社区：Karpathy autoresearch（2026-03）
+
+**[karpathy/autoresearch](https://github.com/karpathy/autoresearch)**：单 GPU、固定 `prepare.py` 与数据，**仅改 `train.py`**，5 分钟固定 wall-clock、指标 **val_bpb**；社区报告一夜百余次实验、验证损失可显著下降（如 GitHub Discussions #43 等会话报告）。**不属于**合成训练数据或开放域数据，而是**算法/超参/架构搜索**的工程化闭环。
+
+**公开讨论渠道（便于跟踪，非官方排名）**：论文作者与 Hugging Face Papers 的转发、GitHub Discussions、ICLR/NeurIPS 相关 account 的摘要帖；若需「一手」观点，建议以 **arXiv + 开源仓库** 为主。
+
+---
+
+## 10. 可直接复用的技术
 
 | 来源 | 可复用技术 | 在 SelfLLM 中的用途 |
 |------|----------|-------------------|
@@ -406,7 +466,11 @@
 | Constitutional AI | 原则约束 + 自我批评 | 安全框架 |
 | InSTA | 三阶段数据生成 pipeline | 数据搜集系统 |
 | LADDER | 递归问题分解 | 自适应课程学习 |
+| Self-Improving Pretraining | 后训模型当预训裁判 + RL | 预训/数据质量信号设计（需裁判模型） |
+| LSE | 测试时上下文演化 + RL | 与「改训练代码」互补的上下文层 |
+| E-SPL | 进化 prompt + RL 权重 | 策略/系统提示联合搜索 |
+| 2603.25681 综述 | 生命周期 + 自主评估层 | 架构对齐与文献索引 |
 
 ---
 
-*调研截止日期：2026 年 3 月。将持续跟踪最新进展。*
+*调研更新：2026 年 3 月（含 2026Q1 新论文）。将持续跟踪 arXiv 与顶会。*
