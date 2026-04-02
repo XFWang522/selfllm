@@ -8,6 +8,7 @@ authors: Haoyan Yang, Mario Xerri, Solha Park, Huajian Zhang, Yiyang Feng, Sai A
 affiliation: Zesearch NLP Lab, Stony Brook University
 extracted: 2026-04-02
 note: 正文由 arXiv PDF 机器提取并合并断行，可能与官方排版略有差异；公式与图表以原 PDF 为准。
+zh_summary: paper-yang-2026-self-improvement-llm-fulltext-zh.md
 ---
 
 # Self-Improvement of Large Language Models: A Technical Overview and Future Outlook
